@@ -89,5 +89,9 @@
 	return nil;
 }
 
+-(NSArray *)calendarMonthView:(TKCalendarMonthView *)monthView backgroundImageViewsFromDate:(NSDate *)startDate toDate:(NSDate *)lastDate
+{
+    return nil;
+}
 
 @end

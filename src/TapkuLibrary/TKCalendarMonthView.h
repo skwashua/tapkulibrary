@@ -143,4 +143,12 @@
  */
 - (NSArray*) calendarMonthView:(TKCalendarMonthView*)monthView marksFromDate:(NSDate*)startDate toDate:(NSDate*)lastDate;
 
+/** A data source that will correspond to images for the calendar month grid for a particular month.
+ @param monthView The calendar month grid.
+ @param startDate The first date shown by the calendar month grid.
+ @param lastDate The last date shown by the calendar month grid.
+ @return Returns an array of UIImageView objects corresponding the number of days specified in the start and last day parameters.
+ */
+- (NSArray*) calendarMonthView:(TKCalendarMonthView*)monthView backgroundImageViewsFromDate:(NSDate*)startDate toDate:(NSDate*)lastDate;
+
 @end

@@ -70,6 +70,7 @@ static UIImage *tileImage;
 @property (nonatomic,strong) NSArray *datesArray;
 @property (nonatomic,strong) NSTimeZone *timeZone;
 @property (nonatomic,strong) NSArray *marks;
+@property (nonatomic,strong) NSArray *imageViews;
 
 
 @end
@@ -216,13 +217,19 @@ static UIImage *tileImage;
 
 
 - (id) initWithMonth:(NSDate*)date marks:(NSArray*)markArray startDayOnSunday:(BOOL)sunday timeZone:(NSTimeZone*)timeZone{
-	if(!(self=[super initWithFrame:CGRectZero])) return nil;
+	
+	return [self initWithMonth:date marks:markArray startDayOnSunday:sunday timeZone:timeZone imageViews:nil];
+}
 
+- (id) initWithMonth:(NSDate*)date marks:(NSArray*)markArray startDayOnSunday:(BOOL)sunday timeZone:(NSTimeZone*)timeZone imageViews:(NSArray*)imageViewArray{
+	if(!(self=[super initWithFrame:CGRectZero])) return nil;
+    
 	
 	self.timeZone = timeZone;
 	
 	firstOfPrev = -1;
-	self.marks = markArray;
+	self.imageViews = imageViewArray;
+    self.marks = markArray;
 	_monthDate = date;
 	startOnSunday = sunday;
 	
@@ -264,10 +271,11 @@ static UIImage *tileImage;
 	[self.selectedImageView addSubview:self.currentDay];
 	[self.selectedImageView addSubview:self.dot];
 	self.multipleTouchEnabled = NO;
-
-
+    
+    
 	return self;
 }
+
 - (void) setTarget:(id)t action:(SEL)a{
 	self.target = t;
 	self.action = a;
@@ -281,13 +289,16 @@ static UIImage *tileImage;
 	
 	return CGRectMake(col*46-1, row*44+6, 46, 44);
 }
-- (void) drawTileInRect:(CGRect)r day:(NSInteger)day mark:(BOOL)mark font:(UIFont*)f1 font2:(UIFont*)f2 context:(CGContextRef)context{
+- (void) drawTileInRect:(CGRect)r day:(NSInteger)day mark:(BOOL)mark font:(UIFont*)f1 font2:(UIFont*)f2 context:(CGContextRef)context imageView:(UIImageView*)imageView {
 
     NSString *str = [numberFormatter stringFromNumber:@(day)];
 	r.size.height -= 2;
 	
 	CGContextSetPatternPhase(context, CGSizeMake(r.origin.x, r.origin.y - 2));
 
+    if (imageView) {
+        [imageView drawRect:r];
+    }
 	
 	[str drawInRect: r
 		   withFont: f1
@@ -303,9 +314,6 @@ static UIImage *tileImage;
 		   lineBreakMode: NSLineBreakByWordWrapping 
 			   alignment: NSTextAlignmentCenter];
 	}
-	
-
-
 }
 - (void) drawRect:(CGRect)rect {
 	
@@ -335,7 +343,7 @@ static UIImage *tileImage;
     CGColorRef darkColor = CGColorCreate(myColorSpace, darkColorValues);
 	
 
-	NSInteger index = 0, mc = self.marks.count;
+	NSInteger index = 0, mc = self.marks.count, ic = self.imageViews.count;
 	
 	
 	UIFont *font = [UIFont boldSystemFontOfSize:DATE_FONT_SIZE];
@@ -348,7 +356,9 @@ static UIImage *tileImage;
 			r = [self rectForCellAtIndex:index];
 			
 			BOOL mark = mc > 0 && index < mc ? [self.marks[index] boolValue] : NO;
-			[self drawTileInRect:r day:i mark:mark font:font font2:font2 context:context];
+            UIImageView *iv = ic > 0 && index < ic ? self.imageViews[index]: nil;
+            
+			[self drawTileInRect:r day:i mark:mark font:font font2:font2 context:context imageView:iv];
 
 			index++;
 		}
@@ -371,7 +381,9 @@ static UIImage *tileImage;
 		}
 		
 		BOOL mark = mc > 0 && index < mc ? [self.marks[index] boolValue] : NO;
-		[self drawTileInRect:r day:i mark:mark font:font font2:font2 context:context];
+        UIImageView *iv = ic > 0 && index < ic ? self.imageViews[index]: nil;
+
+		[self drawTileInRect:r day:i mark:mark font:font font2:font2 context:context imageView:iv];
 		
 		if(today == i){
 			CGContextSetShadowWithColor(context, CGSizeMake(0,1), 0, whiteColor);
@@ -389,7 +401,9 @@ static UIImage *tileImage;
 	while(index % 7 != 0){
 		r = [self rectForCellAtIndex:index];
 		BOOL mark = mc > 0 && index < mc ? [self.marks[index] boolValue] : NO;
-		[self drawTileInRect:r day:i mark:mark font:font font2:font2 context:context];
+        UIImageView *iv = ic > 0 && index < ic ? self.imageViews[index]: nil;
+
+		[self drawTileInRect:r day:i mark:mark font:font font2:font2 context:context imageView:iv];
 		i++;
 		index++;
 	}
@@ -758,8 +772,9 @@ static UIImage *tileImage;
 	NSDate *month = [date firstOfMonthWithTimeZone:self.timeZone];
 	NSArray *dates = [TKCalendarMonthTiles rangeOfDatesInMonthGrid:month startOnSunday:self.sunday timeZone:self.timeZone];
 	NSArray *data = [self.dataSource calendarMonthView:self marksFromDate:dates[0] toDate:[dates lastObject]];
+    NSArray *images = [self.dataSource calendarMonthView:self backgroundImageViewsFromDate:dates[0] toDate:[dates lastObject]];
 	
-	self.currentTile = [[TKCalendarMonthTiles alloc] initWithMonth:month marks:data startDayOnSunday:self.sunday timeZone:self.timeZone];
+	self.currentTile = [[TKCalendarMonthTiles alloc] initWithMonth:month marks:data startDayOnSunday:self.sunday timeZone:self.timeZone imageViews:images];
 	[self.currentTile setTarget:self action:@selector(_tileSelectedWithData:)];
 	
 	[self.tileBox addSubview:self.currentTile];
